@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import backend.application.DTO.UserDTOCadaster;
+import backend.application.DTO.UserResponseDTO;
 import backend.application.models.user.UserModel;
 import backend.application.models.user.UserRole;
 import backend.application.repositories.UserRepository;
@@ -39,7 +39,7 @@ public class UserController {
             @ApiResponse(responseCode = "201", description = "User Created")
     })
     @PostMapping("/create")
-    public ResponseEntity<?> createUser(@RequestBody UserDTOCadaster entity) {
+    public ResponseEntity<?> createUser(@RequestBody UserResponseDTO entity) {
         UserModel user = new UserModel();
         user.setEmail(entity.email());
         user.setName(entity.name());
@@ -80,7 +80,7 @@ public class UserController {
     @Operation(summary = "Atulizar um usuário pelo id")
     // atulizar um usuário pelo id
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDTOCadaster entity) {
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserResponseDTO entity) {
         // procura o usuário pelo id, se não encontrar, lança uma execeção
         UserModel user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
