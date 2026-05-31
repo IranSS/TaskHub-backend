@@ -1,5 +1,6 @@
 package backend.application.controllers;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -14,94 +15,82 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import backend.application.DTO.UserDTOCadaster;
-import backend.application.models.user.UserModel;
-import backend.application.models.user.UserRole;
-import backend.application.repositories.UserRepository;
+import backend.application.DTO.UserCreateDTO;
+import backend.application.DTO.UserResponseDTO;
+import backend.application.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
     
-    UserRepository userRepository;
+    UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     // CRUD completo de usuários
     // operação para criar um novo usuário
-    @Operation(summary = "Responsável por criar um usuário")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User Created")
+    @Operation(summary = "Criar um usuário")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
-    @PostMapping("/create")
-    public ResponseEntity<?> createUser(@RequestBody UserDTOCadaster entity) {
-        UserModel user = new UserModel();
-        user.setEmail(entity.email());
-        user.setName(entity.name());
-        user.setPassword(entity.password());
+    @PostMapping
+    public ResponseEntity<UserResponseDTO> createUser(
+            @Valid @RequestBody UserCreateDTO dto) {
 
-        // Se o usuário não informar seu nível de acesso, ele vai ser criado como um
-        // usuário padrão
-        // Atualmente só existe 2 tipos USER(o padrão) e ADMIN(consegue acessar todos os
-        // endpoints)
-        if (entity.role() == null) {
-            user.setRole(UserRole.USER);
-        }
-        else if(user.getRole() == null){
-            user.setRole(UserRole.USER);
-        }
-        else {
-            user.setRole(entity.role());
-        }
-
-        userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado com sucesso!");
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userService.create(dto));
     }
 
-    @Operation(summary = "Operação para obter um usuário pelo email")
-    // operação para obter um usuário pelo email
-    @GetMapping("/getOne")
-    public ResponseEntity<?> getOneUser(@RequestParam String email) {
-        return ResponseEntity.status(HttpStatus.OK).body(userRepository.findByEmail(email));
+    @Operation(summary = "Buscar usuário pelo email")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    @GetMapping
+    public ResponseEntity<UserResponseDTO> getOneUser(@RequestParam String email) {
+        return ResponseEntity.ok(userService.findbyEmail(email));
     }
 
-    @Operation(summary = "Operação para obter todos os usuários")
-    // operação para obter todos os usuários
-    @GetMapping("/getAll")
-    public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.status(HttpStatus.OK).body(userRepository.findAll());
+    @Operation(summary = "Listar todos os usuários")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description= "Lista de usuários")
+    })
+    @GetMapping("/all")
+    public ResponseEntity<List> getAllUsers() {
+        return ResponseEntity.ok(userService.findAll());
     }
 
-    @Operation(summary = "Atulizar um usuário pelo id")
-    // atulizar um usuário pelo id
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDTOCadaster entity) {
-        // procura o usuário pelo id, se não encontrar, lança uma execeção
-        UserModel user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
-        user.setEmail(entity.email());
-        user.setName(entity.name());
-        user.setPassword(entity.password());
-        userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.OK).body("Usuário atualizado com sucesso!");
+    @Operation(summary = "Atulizar um usuário pelo ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Usuário atualizado"),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> update(
+                @PathVariable UUID id, 
+                @Valid @RequestBody UserResponseDTO dto) {
+        
+        return ResponseEntity.ok(userService.update(id, dto));
     }
 
     @Operation(summary = "Deletar usuário pelo id")
-    // Deletar usuário pelo id
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
-        // Verifica se o usuário existe
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado!");
-        }
-        // Deletar o usuário se encontrar ele
-        userRepository.deleteById(id);
-        return ResponseEntity.status(HttpStatus.OK).body("Usuário deletado com sucesso!");
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Usuário removido"),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado") 
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> delete(@PathVariable UUID id) {
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

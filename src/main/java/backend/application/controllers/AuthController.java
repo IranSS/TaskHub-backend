@@ -1,41 +1,33 @@
 package backend.application.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.application.DTO.AuthResponsedDTO;
 import backend.application.DTO.LoginDTO;
-import backend.application.config.Token.JwtService;
-import backend.application.models.user.UserModel;
-import backend.application.repositories.UserRepository;
+import backend.application.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
     
-    @Autowired
-    JwtService jwtService;
-    UserRepository userRepository;
+    private final AuthService authService;
 
-    AuthController(UserRepository userRepository){
-        this.userRepository = userRepository;
+    public AuthController(AuthService authService){
+        this.authService = authService;
     }
 
     // Validar sessão, retorna um token para ser usado nos Endpoints
-    @Operation(summary = "Validar sessão: Retorna um token para ser usado nos Endpoints")
+    @Operation(summary = "Autenticação de usuário e geração de token JWT")
     @PostMapping("/login")
-    public String login(@RequestBody LoginDTO loginDTO){
-        UserModel user = userRepository.findByEmail(loginDTO.email())
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado!"));
-
-        if(loginDTO.email().equals(user.getEmail())  &&
-           loginDTO.password().equals(user.getPassword())) {
-            return "token" + ": " + jwtService.generateToken(loginDTO.email());
-        }
+    public ResponseEntity<AuthResponsedDTO> login(
+            @RequestBody @Valid LoginDTO loginDTO){
         
-        throw new RuntimeException("Credenciais inválidas");
+        return ResponseEntity.ok(authService.login(loginDTO));
     }
 }
