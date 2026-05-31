@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import backend.application.DTO.UserCreateDTO;
 import backend.application.DTO.UserResponseDTO;
 import backend.application.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +42,7 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
-            @Valid @RequestBody UserResponseDTO dto) {
+            @Valid @RequestBody UserCreateDTO dto) {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
