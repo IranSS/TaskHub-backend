@@ -39,6 +39,13 @@ Durante a refatoração, foram realizadas as seguintes ações:
 
 > ⚠️ Importante: a refatoração **não alterou o comportamento funcional** do sistema, apenas sua estrutura interna.
 
+## 🚀 Deploy da Aplicação
+
+A aplicação refatorada está disponível para acesso no seguinte endereço:
+
+**Link do deploy:**
+https://taskhub-backend-7wyq.onrender.com/swagger-ui/index.html#/
+
 ## 🧱 Tecnologias Utilizadas
 
 - **Java 21**
